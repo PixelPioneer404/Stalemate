@@ -45,21 +45,29 @@ export const useSoundEffects = () => {
         return;
       }
 
-      const audioContext = await ensureContext();
-      if (!audioContext) {
-        return;
-      }
+      try {
+        const audioContext = await ensureContext();
+        if (!audioContext) {
+          return;
+        }
 
-      if (capture) {
-        buildTone(audioContext, { frequency: 210, durationMs: 105, type: 'triangle', gain: 0.045 });
-      } else {
-        buildTone(audioContext, { frequency: 460, durationMs: 90, type: 'sine', gain: 0.03 });
-      }
+        if (capture) {
+          buildTone(audioContext, { frequency: 210, durationMs: 105, type: 'triangle', gain: 0.045 });
+        } else {
+          buildTone(audioContext, { frequency: 460, durationMs: 90, type: 'sine', gain: 0.03 });
+        }
 
-      if (check) {
-        setTimeout(() => {
-          buildTone(audioContext, { frequency: 660, durationMs: 70, type: 'square', gain: 0.02 });
-        }, 55);
+        if (check) {
+          setTimeout(() => {
+            try {
+              buildTone(audioContext, { frequency: 660, durationMs: 70, type: 'square', gain: 0.02 });
+            } catch (err) {
+              console.error('Error playing check sound:', err);
+            }
+          }, 55);
+        }
+      } catch (error) {
+        console.error('Error playing move feedback:', error);
       }
     },
     [ensureContext, muted]

@@ -12,6 +12,8 @@ export default defineConfig({
   plugins: [tailwindcss(), react()],
   server: {
     port: 5173,
+    host: true,
+    allowedHosts: 'all',
     proxy: {
       '/create-match': {
         target: 'http://localhost:3000',

@@ -9,16 +9,20 @@ const PIECE_ORDER = {
   p: 4,
 };
 
-const sortCapturedPieces = (pieces) =>
-  [...pieces].sort((a, b) => {
-    const orderA = PIECE_ORDER[a[1]] ?? 99;
-    const orderB = PIECE_ORDER[b[1]] ?? 99;
+const sortCapturedPieces = (pieces) => {
+  if (!Array.isArray(pieces)) {
+    return [];
+  }
+  return [...pieces].sort((a, b) => {
+    const orderA = PIECE_ORDER[a?.[1]] ?? 99;
+    const orderB = PIECE_ORDER[b?.[1]] ?? 99;
 
     return orderA - orderB;
   });
+};
 
 const CapturedRow = ({ label, pieces, compact }) => {
-  const orderedPieces = sortCapturedPieces(pieces);
+  const orderedPieces = sortCapturedPieces(pieces || []);
 
   return (
     <div

@@ -148,48 +148,60 @@ const MultiplayerSessionView = ({
   const clockTimes = useMemo(() => getDisplayedClocks(matchState, nowMs), [matchState, nowMs]);
   const timeControlLabel = matchState?.timeControl?.label ?? 'Rapid 15|10';
 
-  const whiteName = matchState?.players?.find((player) => player.color === 'white')?.name ?? 'White';
-  const blackName = matchState?.players?.find((player) => player.color === 'black')?.name ?? 'Black';
+  const whiteName = matchState?.players?.find((player) => player?.color === 'white')?.name ?? 'White';
+  const blackName = matchState?.players?.find((player) => player?.color === 'black')?.name ?? 'Black';
 
   const statusMeta = getStatusMeta(matchState);
 
-  const turnLabel = matchState
+  const turnLabel = matchState && matchState.turn
     ? `${matchState.turn[0].toUpperCase()}${matchState.turn.slice(1)} to move`
     : 'Waiting for state';
 
   const gameOverMessage = useMemo(() => matchState?.result?.reason ?? null, [matchState?.result?.reason]);
   const captured = useMemo(
-    () => getCapturedPiecesAtPly(matchState?.fenHistory ?? [], historyIndex),
+    () => {
+      try {
+        return getCapturedPiecesAtPly(matchState?.fenHistory ?? [], historyIndex);
+      } catch (err) {
+        console.error('Error getting captured pieces:', err);
+        return { white: [], black: [] };
+      }
+    },
     [historyIndex, matchState?.fenHistory]
   );
 
-  const reviewCheckSquare = (() => {
-    if (!displayedFen) {
-      return null;
-    }
+  const reviewCheckSquare = useMemo(() => {
+    try {
+      if (!displayedFen) {
+        return null;
+      }
 
-    if (historyIndex === (matchState?.fenHistory.length ?? 1) - 1) {
-      return checkSquare;
-    }
+      if (historyIndex === (matchState?.fenHistory?.length ?? 1) - 1) {
+        return checkSquare;
+      }
 
-    const chess = new Chess(displayedFen);
-    if (!chess.inCheck()) {
-      return null;
-    }
+      const chess = new Chess(displayedFen);
+      if (!chess.inCheck()) {
+        return null;
+      }
 
-    const board = chess.board();
-    const color = chess.turn();
+      const board = chess.board();
+      const color = chess.turn();
 
-    for (const row of board) {
-      for (const piece of row) {
-        if (piece && piece.type === 'k' && piece.color === color) {
-          return piece.square;
+      for (const row of board) {
+        for (const piece of row) {
+          if (piece && piece.type === 'k' && piece.color === color) {
+            return piece.square;
+          }
         }
       }
-    }
 
-    return null;
-  })();
+      return null;
+    } catch (err) {
+      console.error('Error calculating check square:', err);
+      return null;
+    }
+  }, [displayedFen, historyIndex, matchState?.fenHistory?.length, checkSquare]);
 
   const copyCode = async () => {
     try {

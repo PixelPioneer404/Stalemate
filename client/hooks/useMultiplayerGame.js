@@ -110,10 +110,14 @@ export const useMultiplayerGame = ({
         }
 
         if (state.lastMove) {
-          await playMoveFeedback({
-            capture: state.lastMove.capture,
-            check: state.lastMove.check,
-          });
+          try {
+            await playMoveFeedback({
+              capture: state.lastMove.capture,
+              check: state.lastMove.check,
+            });
+          } catch (soundErr) {
+            console.error('Error playing move sound:', soundErr);
+          }
         }
       } catch (err) {
         console.error('Error updating board:', err);
@@ -187,26 +191,31 @@ export const useMultiplayerGame = ({
   };
 
   const selectPiece = (square) => {
-    if (!latestFen || !me) {
+    try {
+      if (!latestFen || !me) {
+        resetSelection();
+        return;
+      }
+
+      const chess = new Chess(latestFen);
+      const piece = chess.get(square);
+
+      if (!piece || piece.color !== me.color[0] || chess.turn() !== me.color[0]) {
+        resetSelection();
+        return;
+      }
+
+      const moves = getLegalMovesFromFen(latestFen, square).map((move) => ({
+        to: move.to,
+        capture: move.flags.includes('c') || move.flags.includes('e'),
+      }));
+
+      setSelectedSquare(square);
+      setLegalMoves(moves);
+    } catch (err) {
+      console.error('Error selecting piece:', err);
       resetSelection();
-      return;
     }
-
-    const chess = new Chess(latestFen);
-    const piece = chess.get(square);
-
-    if (!piece || piece.color !== me.color[0] || chess.turn() !== me.color[0]) {
-      resetSelection();
-      return;
-    }
-
-    const moves = getLegalMovesFromFen(latestFen, square).map((move) => ({
-      to: move.to,
-      capture: move.flags.includes('c') || move.flags.includes('e'),
-    }));
-
-    setSelectedSquare(square);
-    setLegalMoves(moves);
   };
 
   const submitMove = async (from, to) => {
@@ -329,15 +338,20 @@ export const useMultiplayerGame = ({
   const requestCancelRoom = () => runRoomAction('cancelRoom');
 
   const checkSquare = useMemo(() => {
-    if (!displayedFen) {
+    try {
+      if (!displayedFen) {
+        return null;
+      }
+
+      if (isLiveView) {
+        return matchState?.checkSquare ?? null;
+      }
+
+      return getCheckSquareFromFen(displayedFen);
+    } catch (err) {
+      console.error('Error getting check square:', err);
       return null;
     }
-
-    if (isLiveView) {
-      return matchState?.checkSquare ?? null;
-    }
-
-    return getCheckSquareFromFen(displayedFen);
   }, [displayedFen, isLiveView, matchState?.checkSquare]);
 
   return {

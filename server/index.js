@@ -88,6 +88,11 @@ const bootstrap = async () => {
       appType: 'spa',
       server: {
         middlewareMode: true,
+        host: true,
+        hmr: {
+          clientPort: 443,
+          protocol: 'wss',
+        },
       },
     });
 

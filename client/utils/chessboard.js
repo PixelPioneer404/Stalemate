@@ -62,6 +62,10 @@ export const getOrientationAxes = (orientation) => {
 export const getMoveRows = (sanMoves) => {
   const rows = [];
 
+  if (!Array.isArray(sanMoves)) {
+    return rows;
+  }
+
   for (let moveIndex = 0; moveIndex < sanMoves.length; moveIndex += 2) {
     rows.push({
       moveNumber: moveIndex / 2 + 1,
@@ -91,22 +95,31 @@ const emptyPieceCount = () => ({
 });
 
 const getPieceCountFromFen = (fen) => {
-  const counts = emptyPieceCount();
-  const chess = new Chess(fen);
-  const board = chess.board();
-
-  for (const row of board) {
-    for (const piece of row) {
-      if (!piece) {
-        continue;
-      }
-
-      const key = `${piece.color}${piece.type}`;
-      counts[key] = (counts[key] ?? 0) + 1;
+  try {
+    if (!fen || typeof  fen !== 'string') {
+      return emptyPieceCount();
     }
-  }
 
-  return counts;
+    const counts = emptyPieceCount();
+    const chess = new Chess(fen);
+    const board = chess.board();
+
+    for (const row of board) {
+      for (const piece of row) {
+        if (!piece) {
+          continue;
+        }
+
+        const key = `${piece.color}${piece.type}`;
+        counts[key] = (counts[key] ?? 0) + 1;
+      }
+    }
+
+    return counts;
+  } catch (err) {
+    console.error('Error getting piece count from FEN:', err);
+    return emptyPieceCount();
+  }
 };
 
 const findCapturedPieceType = (beforeCounts, afterCounts, capturedColorPrefix) => {
@@ -165,29 +178,46 @@ export const getCapturedPiecesAtPly = (fenHistory, plyIndex) => {
 };
 
 export const getLegalMovesFromFen = (fen, square) => {
-  const chess = new Chess(fen);
-  return chess.moves({ square, verbose: true });
+  try {
+    if (!fen || typeof fen !== 'string') {
+      return [];
+    }
+    const chess = new Chess(fen);
+    return chess.moves({ square, verbose: true });
+  } catch (err) {
+    console.error('Error getting legal moves:', err);
+    return [];
+  }
 };
 
 export const getCheckSquareFromFen = (fen) => {
-  const chess = new Chess(fen);
+  try {
+    if (!fen || typeof fen !== 'string') {
+      return null;
+    }
 
-  if (!chess.inCheck()) {
-    return null;
-  }
+    const chess = new Chess(fen);
 
-  const board = chess.board();
-  const color = chess.turn();
+    if (!chess.inCheck()) {
+      return null;
+    }
 
-  for (const row of board) {
-    for (const piece of row) {
-      if (piece && piece.type === 'k' && piece.color === color) {
-        return piece.square;
+    const board = chess.board();
+    const color = chess.turn();
+
+    for (const row of board) {
+      for (const piece of row) {
+        if (piece && piece.type === 'k' && piece.color === color) {
+          return piece.square;
+        }
       }
     }
-  }
 
-  return null;
+    return null;
+  } catch (err) {
+    console.error('Error getting check square:', err);
+    return null;
+  }
 };
 
 export const getGameOverMessage = (chess) => {

@@ -13,9 +13,9 @@ const MoveHistoryPanel = ({
   showNavigationControls = true,
   className = '',
 }) => {
-  const rows = getMoveRows(moveHistory);
-  const currentPly = Math.max(0, historyIndex);
-  const isLive = historyIndex === fenHistory.length - 1;
+  const rows = getMoveRows(moveHistory || []);
+  const currentPly = Math.max(0, historyIndex || 0);
+  const isLive = historyIndex === (Array.isArray(fenHistory) ? fenHistory.length - 1 : 0);
 
   return (
     <aside
