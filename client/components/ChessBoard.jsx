@@ -152,26 +152,35 @@ const ChessBoard = ({
       position: safePosition,
       boardOrientation: orientation,
       onSquareClick: (value) => {
-        const square = typeof value === 'string' ? value : value?.square;
-        if (!disabled && square) {
-          onSquareClick?.(square);
+        try {
+          const square = typeof value === 'string' ? value : value?.square;
+          if (!disabled && square) {
+            onSquareClick?.(square);
+          }
+        } catch (error) {
+          console.error('Square click error:', error);
         }
       },
       onPieceClick: (pieceOrData, maybeSquare) => {
-        const square =
-          typeof maybeSquare === 'string'
-            ? maybeSquare
-            : typeof pieceOrData === 'string'
-              ? null
-              : pieceOrData?.square;
-        if (!disabled && square) {
-          onSquareClick?.(square);
+        try {
+          const square =
+            typeof maybeSquare === 'string'
+              ? maybeSquare
+              : typeof pieceOrData === 'string'
+                ? null
+                : pieceOrData?.square;
+          if (!disabled && square) {
+            onSquareClick?.(square);
+          }
+        } catch (error) {
+          console.error('Piece click error:', error);
         }
       },
       allowDragging: false,
       boardStyle: {
         borderRadius: '0px',
         overflow: 'hidden',
+        touchAction: 'manipulation',
       },
       darkSquareStyle: { backgroundColor: '#334764' },
       lightSquareStyle: { backgroundColor: '#b9c2cd' },

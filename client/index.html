@@ -4,12 +4,14 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="/logo.png" />
     <link rel="apple-touch-icon" href="/logo.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
     <meta
       name="description"
       content="Stalemate is a real-time chess app with local practice and instant online match codes."
     />
     <meta name="theme-color" content="#020617" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta property="og:title" content="Stalemate" />
     <meta
       property="og:description"
@@ -18,6 +20,18 @@
     <meta property="og:type" content="website" />
     <meta property="og:image" content="/logo.png" />
     <title>Stalemate</title>
+    <style>
+      /* Prevent pull-to-refresh on mobile */
+      body {
+        overscroll-behavior-y: contain;
+        -webkit-overflow-scrolling: touch;
+      }
+      
+      /* Improve touch responsiveness */
+      * {
+        -webkit-tap-highlight-color: transparent;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>

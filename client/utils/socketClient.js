@@ -7,5 +7,15 @@ export const createSocketClient = () => {
     autoConnect: false,
     transports: ['websocket', 'polling'],
     withCredentials: true,
+    reconnection: true,
+    reconnectionAttempts: 10,
+    reconnectionDelay: 1000,
+    reconnectionDelayMax: 5000,
+    timeout: 20000,
+    forceNew: false,
+    // Mobile-specific optimizations
+    upgrade: true,
+    rememberUpgrade: true,
+    perMessageDeflate: false,
   });
 };

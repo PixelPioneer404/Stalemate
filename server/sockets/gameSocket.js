@@ -29,18 +29,28 @@ const emitOkAck = (ack, payload = {}) => {
 };
 
 const emitBoardState = (io, match, chess = null) => {
-  io.to(match.matchCode).emit('updateBoard', getMatchSnapshot(match, chess ?? new Chess(match.fen)));
+  try {
+    const snapshot = getMatchSnapshot(match, chess ?? new Chess(match.fen));
+    io.to(match.matchCode).emit('updateBoard', snapshot);
+  } catch (error) {
+    console.error('Error emitting board state:', error);
+  }
 };
 
 const emitGameOver = (io, match) => {
-  io.to(match.matchCode).emit('gameOver', {
-    matchCode: match.matchCode,
-    status: match.status,
-    result: match.result,
-  });
+  try {
+    io.to(match.matchCode).emit('gameOver', {
+      matchCode: match.matchCode,
+      status: match.status,
+      result: match.result,
+    });
+  } catch (error) {
+    console.error('Error emitting game over:', error);
+  }
 };
 
 const handleActionError = (ack, error) => {
+  console.error('Action error:', error);
   if (error instanceof MatchServiceError) {
     emitErrorAck(ack, error.message, 'MATCH_SERVICE_ERROR');
     return;
@@ -71,7 +81,18 @@ const getRequester = (match, socketId) => {
 
 const joinRoom = async (io, socket, payload, ack, { allowAutoJoinSecond }) => {
   try {
+    if (!payload || typeof payload !== 'object') {
+      emitErrorAck(ack, 'Invalid payload.', 'BAD_REQUEST');
+      return;
+    }
+
     const { matchCode, name } = payload;
+
+    if (!matchCode || !name) {
+      emitErrorAck(ack, 'Match code and name are required.', 'BAD_REQUEST');
+      return;
+    }
+
     const { match, player } = await attachSocketToMatch({
       rawCode: matchCode,
       rawName: name,
@@ -92,18 +113,30 @@ const joinRoom = async (io, socket, payload, ack, { allowAutoJoinSecond }) => {
       state: getMatchSnapshot(match),
     });
   } catch (error) {
+    console.error('Join room error:', error);
     handleActionError(ack, error);
   }
 };
 
 const handleMove = async (io, socket, payload, ack) => {
+  if (!payload || typeof payload !== 'object') {
+    emitErrorAck(ack, 'Invalid payload.', 'BAD_REQUEST');
+    return;
+  }
+
   const { matchCode: rawCode, from, to, promotion = 'q' } = payload;
+
+  if (!rawCode || !from || !to) {
+    emitErrorAck(ack, 'Match code, from, and to are required.', 'BAD_REQUEST');
+    return;
+  }
 
   let matchCode;
 
   try {
     matchCode = normalizeMatchCode(rawCode);
   } catch (error) {
+    console.error('Match code normalization error:', error);
     handleActionError(ack, error);
     return;
   }
@@ -160,6 +193,7 @@ const handleMove = async (io, socket, payload, ack) => {
       emitOkAck(ack);
     });
   } catch (error) {
+    console.error('Move handling error:', error);
     handleActionError(ack, error);
   }
 };
